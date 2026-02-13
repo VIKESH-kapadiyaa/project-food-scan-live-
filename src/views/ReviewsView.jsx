@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
 import { PlusCircle, Star, Award } from 'lucide-react';
 
-const ReviewsView = ({ points, setPoints }) => {
-    const [reviews, setReviews] = useState([
-        { user: 'Siddharth', comment: 'Fresh and perfectly spiced!', pts: 50, rating: 5 },
-        { user: 'Priya', comment: 'Loved it. High quality.', pts: 50, rating: 4 },
-    ]);
+const ReviewsView = ({ points, setPoints, reviews, setReviews }) => {
     const [msg, setMsg] = useState('');
 
     const submit = () => {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, CheckCircle2, Activity, ShieldCheck, Fingerprint, ShoppingBag, X, Clock, AlertTriangle } from 'lucide-react';
+import { foodApi } from '../services/foodApi';
 
 const EvaluateFlow = ({ onScanComplete }) => {
     const [activeStep, setActiveStep] = useState(0);
@@ -82,32 +83,76 @@ const EvaluateFlow = ({ onScanComplete }) => {
         }
     };
 
-    const runAnalysis = () => {
+    const runAnalysis = async () => {
         setIsAnalyzing(true);
-        // Simulate AI Decision Tree
+
+        // FUTURE: Use this key for real API calls
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        if (!apiKey) {
+            console.log("Dev Mode: Simulating AI Analysis (No API Key found)");
+        }
+
+        // Simulate varying analysis time (2.5s - 4.5s)
+        const analysisTime = Math.floor(Math.random() * 2000) + 2500;
+
         setTimeout(() => {
             setIsAnalyzing(false);
 
-            // Guaranteed success for the "Real Website" experience to help users
-            // In a production backend, this would check the image binary
-            const isSuccess = true;
+            // 80% Verification Success Rate for Demo
+            const isSuccess = Math.random() > 0.2;
 
             if (isSuccess) {
+                // Randomize score between 70 and 99
+                const score = Math.floor(Math.random() * 30) + 70;
+                // Randomize refund slightly
+                const refund = (Math.random() * 50 + 150).toFixed(2);
+
+                // Try to fetch real food data if API is configured
+                let foodDetails = {
+                    ingredients: 'Verified',
+                    calories: 'N/A'
+                };
+
+                try {
+                    // Simulate detecting a food name (randomly chosen for demo variety)
+                    const demoFoods = ['Biryani', 'Pizza', 'Salad', 'Burger', 'Pasta'];
+                    const detectedFood = demoFoods[Math.floor(Math.random() * demoFoods.length)];
+
+                    // Call our new API service
+                    // Note: In a real app, this would be triggered by the image recognition result
+                    /* 
+                    const recipes = await foodApi.searchRecipes(detectedFood);
+                    if (recipes && recipes.length > 0) {
+                        const nutrition = await foodApi.getNutrition(recipes[0].id);
+                        if (nutrition) {
+                            foodDetails.calories = `${nutrition.calories} kcal`;
+                            foodDetails.ingredients = nutrition.ingredients?.map(i => i.name).slice(0, 3).join(', ') || 'Verified';
+                        }
+                    }
+                    */
+                    // For now, we will just log that we would call it, to not break the demo without a real API key
+                    console.log(`[Foodoscope] Would fetch data for: ${detectedFood}`);
+                } catch (err) {
+                    console.error("API Integration Error", err);
+                }
+
                 const result = {
                     visual: 'Match Confirmed',
-                    spoilage: 'Detected',
-                    ingredients: 'Verified',
-                    score: 98,
-                    refundAmount: '₹182.00',
-                    id: Date.now()
+                    spoilage: score > 85 ? 'None Detected' : 'Minor Signs',
+                    ingredients: foodDetails.ingredients,
+                    score: score,
+                    refundAmount: `₹${refund}`,
+                    id: Date.now(),
+                    freshness: score > 90 ? 'Excellent' : 'Good',
+                    calories: foodDetails.calories
                 };
                 setFinalResult(result);
                 setFlowState('success');
-                if (onScanComplete) onScanComplete({ ...result, status: 'Safe', score: 98 }); // Logic adapter
+                if (onScanComplete) onScanComplete({ ...result, status: score > 80 ? 'Safe' : 'Caution', score: score });
             } else {
                 setFlowState('failed');
             }
-        }, 3000);
+        }, analysisTime);
     };
 
     const resetScan = () => {

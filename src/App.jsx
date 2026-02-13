@@ -8,23 +8,49 @@ import HealthView from './views/HealthView';
 import MarketView from './views/MarketView';
 
 const App = () => {
+  // Initialize state from localStorage or defaults
   const [activeTab, setActiveTab] = useState('scan');
-  const [points, setPoints] = useState(1250);
+
+  const [points, setPoints] = useState(() => {
+    const saved = localStorage.getItem('foodoscope_points');
+    return saved ? parseInt(saved, 10) : 1250;
+  });
+
   const [isLoaded, setIsLoaded] = useState(false);
 
   // User Profile State
-  const [userProfile, setUserProfile] = useState({
-    name: 'Siddharth',
-    handle: 'Research_Node',
-    role: 'Verified Food Analyst',
-    email: 'sid@example.com'
+  const [userProfile, setUserProfile] = useState(() => {
+    const saved = localStorage.getItem('foodoscope_profile');
+    return saved ? JSON.parse(saved) : {
+      name: 'Siddharth',
+      handle: 'Research_Node',
+      role: 'Verified Food Analyst',
+      email: 'sid@example.com'
+    };
   });
 
   // App State to hold data shared across views
-  const [scanHistory, setScanHistory] = useState([
-    { id: '1', dish: 'Saffron Biryani', date: 'Jan 28, 2026', points: '+10', status: 'Safe', score: 98, details: 'Excellent freshness detected.' },
-    { id: '2', dish: 'Chicken Salad', date: 'Jan 25, 2026', points: '+5', status: 'Caution', score: 65, details: 'Minor temperature inconsistencies.' },
-  ]);
+  const [scanHistory, setScanHistory] = useState(() => {
+    const saved = localStorage.getItem('foodoscope_history');
+    return saved ? JSON.parse(saved) : [
+      { id: '1', dish: 'Saffron Biryani', date: 'Jan 28, 2026', points: '+10', status: 'Safe', score: 98, details: 'Excellent freshness detected.' },
+      { id: '2', dish: 'Chicken Salad', date: 'Jan 25, 2026', points: '+5', status: 'Caution', score: 65, details: 'Minor temperature inconsistencies.' },
+    ];
+  });
+
+  const [reviews, setReviews] = useState(() => {
+    const saved = localStorage.getItem('foodoscope_reviews');
+    return saved ? JSON.parse(saved) : [
+      { user: 'Siddharth', comment: 'Fresh and perfectly spiced!', pts: 50, rating: 5 },
+      { user: 'Priya', comment: 'Loved it. High quality.', pts: 50, rating: 4 },
+    ];
+  });
+
+  // Persistence Effects
+  useEffect(() => { localStorage.setItem('foodoscope_points', points); }, [points]);
+  useEffect(() => { localStorage.setItem('foodoscope_profile', JSON.stringify(userProfile)); }, [userProfile]);
+  useEffect(() => { localStorage.setItem('foodoscope_history', JSON.stringify(scanHistory)); }, [scanHistory]);
+  useEffect(() => { localStorage.setItem('foodoscope_reviews', JSON.stringify(reviews)); }, [reviews]);
 
   // Points Management
   const redeemPoints = (amount) => {
@@ -43,10 +69,10 @@ const App = () => {
     // Add result to history and award points
     const newScan = {
       id: Date.now().toString(),
-      dish: 'New Scan',
+      dish: 'New Scan', // In a real app, this would come from the AI
       date: 'Just Now',
       points: '+15',
-      status: result.score > 80 ? 'Safe' : result.score > 50 ? 'Caution' : 'Unsafe', // Logic derived from score
+      status: result.score > 80 ? 'Safe' : result.score > 50 ? 'Caution' : 'Unsafe',
       score: result.score,
       details: `Freshness: ${result.freshness}, Ingredients: ${result.ingredients}`
     };
@@ -88,7 +114,7 @@ const App = () => {
 
             {activeTab === 'scan' && <EvaluateFlow onScanComplete={handleScanComplete} />}
             {activeTab === 'intel' && <HealthView scanHistory={scanHistory} />}
-            {activeTab === 'reviews' && <ReviewsView points={points} setPoints={setPoints} />}
+            {activeTab === 'reviews' && <ReviewsView points={points} setPoints={setPoints} reviews={reviews} setReviews={setReviews} />}
             {activeTab === 'market' && <MarketView points={points} redeemPoints={redeemPoints} />}
             {activeTab === 'profile' && <ProfileView points={points} scanHistory={scanHistory} userProfile={userProfile} setUserProfile={setUserProfile} />}
           </div>
